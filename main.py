@@ -13,17 +13,23 @@ quake = Spell("Quake", 14, 140, "black")
 cure = Spell("Cure", 12, 120, "white")
 cura = Spell("Cura", 18, 200, "white")
 
+amount = 1
+
 # Create Items
 potion = Item("Potion", "potion", "Heals 50 HP", 50)
 hipotion = Item("Hi-Potion", "potion", "Heals 100 HP", 100)
 superpotion = Item("Super Potion", "potion", "Heals 500 HP", 500)
 elixer = Item("Elixer", "elixer", "Fully restores HP/MP of one party member", 9999)
 hielixer = Item("MegaElixer", "elixer", "Fully restores HP/MP of all party members", 50)
-
 grenade = Item("Grenade", "attack", "Deals 500 damage", 500)
 
 player_spells = [fire, thunder, blizzard, meteor, quake, cure, cura]
-player_items = [potion, hipotion, superpotion, elixer, hielixer, grenade]
+player_items = [{"item": potion, "quantity": amount*15},
+                {"item": hipotion, "quantity": amount*5},
+                {"item": superpotion, "quantity": amount*5},
+                {"item": elixer, "quantity": amount*5},
+                {"item": hielixer, "quantity": amount*2},
+                {"item": grenade, "quantity": amount*10}]
 
 # Instantiate People
 player = Person(460, 65, 60, 34, player_spells, player_items)
@@ -45,10 +51,12 @@ while running:
 # ===============================================================================
 
 # ---------------------------- Attacks ------------------------------
+    # Player chooses to physically attack.
     if index == 0:
         dmg = player.generate_damage()
         enemy.take_damge(dmg)
-        print("\nYou attacked for", bcolors.FAIL + bcolors.BOLD + str(dmg) + bcolors.ENDC, "points for damage.")
+        print("\nYou attacked for", bcolors.FAIL + bcolors.BOLD + str(dmg) + bcolors.ENDC, "points of damage.")
+    # Player chooses to use a Spell/Magic.
     elif index == 1:        # ------------------------ Magic Spells Selection ---------------------------------
         player.choose_magic()
         magic_choice = int(input("Choose spell: ")) - 1
@@ -79,6 +87,7 @@ while running:
             print()
             print(bcolors.OKBLUE + spell.name + bcolors.ENDC, "deals", bcolors.OKBLUE + str(magic_dmg) + bcolors.ENDC,
                   "points of damage.")
+    # Player chooses to use an item.
     elif index == 2:
         player.choose_item()
         item_choice = int(input("Choose item: " )) - 1
@@ -86,11 +95,27 @@ while running:
         if item_choice == -1:
             continue
 
-        item = player.items[item_choice]
+        item = player.items[item_choice]["item"]
+        if player.items[item_choice]["quantity"] == 0:
+            print(bcolors.FAIL + "None left..." + bcolors.ENDC)
+            continue
+        # player for object, .items for function in Person class of player, [item_choice] for
+        # selection, ["quantity"] for selecting the key from the dictionary. And lower by 1.
+        player.items[item_choice]["quantity"] -= 1
+
 
         if item.type == "potion":
             player.heal(item.prop)
             print(bcolors.OKGREEN + "\n" + item.name + bcolors.ENDC, "heals player for", bcolors.OKGREEN + str(item.prop) + bcolors.ENDC, "HP.")
+        elif item.type == "elixer":
+            player.hp = player.maxhp
+            player.mp = player.maxmp
+            print(bcolors.OKGREEN + "\n" + item.name + bcolors.ENDC, "fully restores your HP/MP.")
+        elif item.type == "attack":
+            enemy.take_damge(item.prop)
+            print(bcolors.FAIL + item.name + bcolors.ENDC, "deals", bcolors.FAIL + str(item.prop) + bcolors.ENDC, "points of damage.")
+
+
 # ------------------------------ Damage Section --------------------------------------
     enemy_choice = 1
 
